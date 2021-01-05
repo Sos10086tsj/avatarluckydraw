@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <link rel="icon" href="./images/favicon.ico">
+        <title>幸运抽奖</title>
+        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    </head>
+  <body>
+    <div id="app" v-cloak>
+        <!-- 头部文字 -->
+        <div class="header"><span>XXX 幸运大抽奖</span></div>
+        <!-- 用户部分 -->
+        <div class="main">
+            <el-row class="avatars">
+                <el-col :span="3" v-for="(item, index) in D_NAME_LIST" v-bind:key="index" v-bind:index="index + ''">
+                    <el-avatar shape="square" :size="80" :src="item.avatar"></el-avatar>
+                    <div class="preview"><el-avatar shape="square" v-if="item.preview" :size="100" :src="item.avatar"></el-avatar></div>
+                </el-col>
+            </el-row>
+            <div class="beat_name">
+                <span>{{D_BEAT_NAME}}</span>
+            </div>
+        </div>
+        <!-- 中奖结果 -->
+        <div class="result">
+            <div class="namelist_title">中奖名单</div>
+            <ul class="namelist" ref="namelist">
+                <li class="namelist_item" v-for="(item, index) in D_WINNERS" v-bind:key="index" v-bind:index="index + ''">
+                    <div class="avatar"><el-avatar shape="square" :size="30" :src="item.avatar"></el-avatar></div>
+                    <div class="name"><span>{{item.name}}</span></div>
+                    <div class="clearFl"></div>
+                </li>
+            </ul>
+            <!-- <div class="namelist_item" v-for="(item, index) in D_WINNERS" v-bind:key="index" v-bind:index="index + ''">
+                <div class="avatar"><el-avatar shape="square" :size="30" :src="item.avatar"></el-avatar></div>
+                <div class="name"><span>{{item.name}}</span></div>
+                <div class="clearFl"></div>
+            </div> -->
+        </div>
+        <!-- 按钮 -->
+        <div class="operation">
+            <el-button type="warning" v-if="!D_DRAWING" @click="startDraw" round>开    始</el-button>
+            <el-button type="warning" v-if="D_DRAWING" @click="stopDraw" round>结    束</el-button>
+        </div>
+    </div>
+  </body>
+  <style>
+    [v-cloak]{
+        display:none;
+        }
+    body{
+        background-image: url('./images/background.jpg');
+        background-size: cover;
+        background-repeat: no-repeat;
+    }
+    .header{
+        text-align: center;
+        margin-top: 40px;
+        font-size: 40px;
+        color: yellow;
+    }
+    .main .avatars{
+        width: 50%;
+        left: 25%;
+        border: 1px solid #ffffc6;
+        padding: 5px;
+    }
+    .main .avatars .preview{
+        z-index: 999;
+        position: fixed;
+        margin: -90px -10px;
+    }
+    .main .beat_name{
+        margin-top: 20px;
+        text-align: center;
+        font-size: 36px;
+        color: #f6f669;
+    }
+    .operation{
+        text-align: center;
+        margin-top: 40px;
+    }
+    .result{
+        position: fixed;
+        right: 100px;
+        top: 100px;
+        height: 550px;
+        width: 200px;
+        border: 1px solid #a2a294;
+        padding: 5px;
+        overflow-y: auto;
+    }
+    .result .namelist_title{
+        text-align: center;
+        font-size: 24px;
+        color: yellow;
+        border-bottom: 1px solid;
+        padding-bottom: 10px;
+    }
+    .result .namelist{
+        list-style: none;
+        padding-inline-start: 0;
+    }
+    .result .namelist_item{
+        padding: 5px;
+    }
+    .result .namelist_item .avatar{
+        float:left;
+    }
+    .result .namelist_item .name{
+        float:left;
+        font-size: 14px;
+        color: #ffff2ade;
+        padding: 5px;
+    }
+    .clearFl{
+        clear: both;
+    }
+  </style>
+  <script src="./data/data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script>
+      var app = new Vue({
+        el: '#app',
+        data(){
+            return{
+                D_NAME_LIST: [],
+                D_WINNERS_INDEX: [],
+                D_WINNERS: [],
+                D_BEAT_INDEX: -1,
+                D_BEAT: null,
+                D_BEAT_NAME: '',
+                D_DRAWING: false
+            }
+        },
+        created(){
+            this.initData()
+        },
+        methods:{
+            // 初始化数据
+            initData(){
+                this.D_NAME_LIST = nameList
+                this.D_NAME_LIST = this.D_NAME_LIST.concat(mockNameList)
+            },
+            // 开始抽奖
+            startDraw(){
+                this.D_DRAWING = true
+                this.D_BEAT = setInterval(this.randomBeat, 200)
+            },
+            // 停止抽奖
+            stopDraw(){
+                clearInterval(this.D_BEAT)
+                this.D_DRAWING = false
+                this.D_WINNERS_INDEX.push(this.D_BEAT_INDEX)
+                let _winners = []
+                _winners.push(nameList[this.D_BEAT_INDEX])
+                _winners = _winners.concat(this.D_WINNERS)
+                this.D_WINNERS = _winners
+                // this.$refs.namelist.scrollTop = 100
+            },
+            // 随机跳动
+            randomBeat(){
+                let _index = this.randomIndex()
+                if(this.D_BEAT_INDEX != -1){
+                    let _preItem = nameList[this.D_BEAT_INDEX]
+                    _preItem.preview = false
+                }
+                let _newItem = nameList[_index]
+                _newItem.preview = true
+                this.D_BEAT_INDEX = _index
+                this.D_BEAT_NAME = _newItem.name
+            },
+            // 获取随机index
+            randomIndex(){
+                let _length = nameList.length
+                let _index = Math.floor(Math.random() * _length)
+                if(_index == this.D_BEAT_INDEX || this.D_WINNERS_INDEX.indexOf(_index) != -1){
+                    _index = this.randomIndex()
+                }
+                return _index
+            }
+        }
+    })
+  </script>
+</html>
